@@ -221,5 +221,68 @@ try:
     printing_df["Download Speed"] = printing_df["Download Speed"].apply(get_size).apply(lambda s: f"{s}/s")
     printing_df["Upload Speed"] = printing_df["Upload Speed"].apply(get_size).apply(lambda s: f"{s}/s")
 
-# except Ket: 
-#     pass
+except KeyError:
+    #when dataframe is empty again 
+    pass
+
+#Clear the screen based on your OS
+os.system("cls") if "nt" in os.name else os.system("clear")
+
+#Print our dataframe 
+print(printing_df.to_string())
+
+#update the global df to the dataframe
+global_df = df
+
+
+
+"""
+The above function iterates over the pid2traffic dictionary, and tries to get the 
+process object using psutil so it can get the name and creation time of the process 
+using the name() and create_time() methods, respectively.
+
+After we create our process dictionary that has most of the information we need about 
+the process including the total usage, we use global_df to get the previous total usage 
+and then calculate the current upload and download speed using that. After that, we 
+append this process to our processes list and convert it as a pandas dataframe to print 
+it.
+
+Before we print the dataframe, we can do some modifications such as sorting by 
+"Download" usage, and also apply the get_size() utility function to print the 
+bytes in a nice scalable format.
+"""
+
+#A function that calls the above function every second
+def print_stats():
+    """
+    A simple function that keeps printing the stats
+    """
+    while is_program_running:
+        time.sleep(1)
+        print_pid2traffic()
+        
+        
+
+"""
+So now, we have two functions that keeps running in separate threads, 
+one is the above print_stats() and the second is the get_connections()
+"""
+
+# Let's make the main code:
+if __name__ == "__main__":
+    #Start the priting thread
+    priting_thread = Thread(target=print_stats)
+    priting_thread.start()
+    
+    #Start the get_connection() function to update the curremt connection 
+    #of this machine
+    connection_thread = Thread(target=get_connections)
+    connection_thread.start()
+    
+    
+    #Start sniffing
+    print("Started sniffing")
+    sniff(prn=process_packet, store=False)
+    
+    #Setting the global variable to False to exit the program
+    is_program_running = False
